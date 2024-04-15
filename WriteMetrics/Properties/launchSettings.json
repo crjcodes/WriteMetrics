@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "WriteMetrics": {
+      "commandName": "Project",
+      "commandLineArgs": "data/TravelingToPerth.md"
+    }
+  }
+}
