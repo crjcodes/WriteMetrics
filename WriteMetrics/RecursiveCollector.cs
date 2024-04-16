@@ -11,13 +11,17 @@ public class RecursiveCollector
     private Node ParentNode { get; set; }
     private Node CurrentNode { get; set; }
 
+    private bool CsvOutputFormat { get; set; } = false;
+
     private string CurrentTextSection { get; set; } = string.Empty;
 
     public RecursiveCollector(string filename)
     {
         CurrentFile = filename;
+
         DocumentFilestream = File.OpenRead(filename);
         DocumentStreamReader = new StreamReader(DocumentFilestream, Encoding.UTF8, true, 128);
+
         ParentNode = new Node(CurrentFile, 0);
         CurrentNode = ParentNode;
     }
@@ -30,7 +34,6 @@ public class RecursiveCollector
 
     public void Collect()
     {
-        ParentNode = new Node(heading: CurrentFile, level: 0);
         CurrentNode = ParentNode;
 
         if (DocumentStreamReader == null)
@@ -41,23 +44,31 @@ public class RecursiveCollector
         {
             if (line.StartsWith('#'))
             {
-                if (!string.IsNullOrEmpty(CurrentTextSection))
-                {
-                    CurrentNode.WordCount = CurrentTextSection.Split(' ', StringSplitOptions.RemoveEmptyEntries).Length;
-                    CurrentTextSection = string.Empty;
-
-                    var nodeToUpdate = CurrentNode.Parent;
-                    while (nodeToUpdate != null)
-                    {
-                        nodeToUpdate.WordCount += CurrentNode.WordCount;
-                        nodeToUpdate = nodeToUpdate.Parent;
-                    }
-                }
+                WrapUpSection();
 
                 ParseAsHeading(line);
             }
             else
                 CurrentTextSection += line;
+        }
+
+        // final section
+        WrapUpSection();
+    }
+
+    internal void WrapUpSection()
+    {
+        if (!string.IsNullOrEmpty(CurrentTextSection))
+        {
+            CurrentNode.WordCount = CurrentTextSection.Split(' ', StringSplitOptions.RemoveEmptyEntries).Length;
+            CurrentTextSection = string.Empty;
+
+            var nodeToUpdate = CurrentNode.Parent;
+            while (nodeToUpdate != null)
+            {
+                nodeToUpdate.WordCount += CurrentNode.WordCount;
+                nodeToUpdate = nodeToUpdate.Parent;
+            }
         }
     }
 
@@ -102,14 +113,17 @@ public class RecursiveCollector
         CurrentNode = node;
     }
 
-    public void Report()
+    public void Report(bool csvFormat = false)
     {
-        var node = ParentNode;
+        CsvOutputFormat = csvFormat;
 
-         Traverse(node);
+        if (CsvOutputFormat)
+            Console.WriteLine("Outline, Num, Name, Word Count");
+
+        Traverse(ParentNode);
     }
 
-    internal static void Traverse(Node node)
+    internal void Traverse(Node node)
     {
         if (node.Parent != null)
             ReportInfo(node);
@@ -121,10 +135,34 @@ public class RecursiveCollector
     }
 
 
-    internal static void ReportInfo(Node node)
+    internal void ReportInfo(Node node)
     {
-        var padding = new string(' ', node.Level * 4);
-        Console.WriteLine($"{padding}{node.Heading}: {node.WordCount}");
+        // TODO: improve
+        var padding = CsvOutputFormat ? string.Empty : new string(' ', node.Level * 4);
+
+        if (node.Heading.Contains("Title"))
+            return;
+
+        var parsedHeading = ParsedHeading(node.Heading);
+        var reportLine = $"{padding}{parsedHeading}, {node.WordCount}";
+
+        Console.WriteLine(reportLine);
+    }
+
+    internal string ParsedHeading(string heading)
+    {
+        // TODO: UGLY
+        if (CsvOutputFormat)
+        {
+            heading = heading.Replace(":", ",")
+                .Replace("Prolgue ", "Prologue, ")
+                .Replace("Part ", "Part, ")
+                .Replace("Episode ", "Episode, ")
+                .Replace("Chapter ", "Chapter, ")
+                .Replace("Scene ", "Scene, ");
+        }
+
+        return heading + ",";
     }
 
 }

@@ -1,10 +1,8 @@
-# Traveling to Perth
+# Title: Traveling to Perth
 
 ## Prologue
 
-The dark hulk drifted across the dim fire of an ancient sun. Emptiness and fear overwhelmed. She knew, she knew, the ship carried something else.
-
-Death.
+(Hidden)
 
 ## Part 1: On Their Way
 
