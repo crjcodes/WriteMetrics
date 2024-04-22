@@ -2,7 +2,7 @@
   "profiles": {
     "WriteMetrics": {
       "commandName": "Project",
-      "commandLineArgs": "data/ShortTestData.md csv"
+      "commandLineArgs": "file=data/ShortTestData.md"
     }
   }
 }

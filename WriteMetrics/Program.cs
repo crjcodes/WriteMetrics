@@ -1,13 +1,37 @@
-﻿using WriteMetrics;
+﻿using Microsoft.Extensions.Configuration;
+using WriteMetrics;
 
-var filename = (args?[0]) ?? throw new InvalidDataException("filename");
+// SETTINGS
 
-bool csvFormat = false;
-if (args.Length > 1 && args[1] == "csv")
-    csvFormat = true;
+var configuration = new ConfigurationBuilder()
+    .AddCommandLine(args.Select(a => a.ToLower()).ToArray<string>())
+    .Build();
 
+if (configuration == null)
+    configuration = new ConfigurationBuilder()
+        .AddInMemoryCollection(new Dictionary<string, string?>()
+        {
+            { "file", "*.md" },
+            { "format", "console" },
+            { "wordcount", "sum" }
+        })
+        .Build();
 
-var collector = new RecursiveCollector(filename);
+var file = configuration["file"];
+
+if (string.IsNullOrEmpty(file))
+    throw new ArgumentException("Must provide a filename as 'file={myfile}`");
+
+var format = configuration["format"] ?? "console";
+var metricsToCollect = SupportedMetrics.MetricCategories.Where(c => !string.IsNullOrWhiteSpace(configuration[c]));
+
+// COLLECT
+
+var collector = new RecursiveCollector(file);
 collector.Collect();
-collector.Report(csvFormat: csvFormat);
+
+// REPORT
+
+Reporter.Configuration = configuration;
+Reporter.Report(collector.ParentNode, format);
 

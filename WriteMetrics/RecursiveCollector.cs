@@ -8,10 +8,8 @@ public class RecursiveCollector
     private FileStream DocumentFilestream { get; set; }
     private StreamReader DocumentStreamReader { get; set; }
 
-    private Node ParentNode { get; set; }
+    public Node ParentNode { get; set; }
     private Node CurrentNode { get; set; }
-
-    private bool CsvOutputFormat { get; set; } = false;
 
     private string CurrentTextSection { get; set; } = string.Empty;
 
@@ -54,13 +52,16 @@ public class RecursiveCollector
 
         // final section
         WrapUpSection();
+
+
     }
 
     internal void WrapUpSection()
     {
         if (!string.IsNullOrEmpty(CurrentTextSection))
         {
-            CurrentNode.WordCount = CurrentTextSection.Split(' ', StringSplitOptions.RemoveEmptyEntries).Length;
+            CurrentNode.Text = CurrentTextSection;
+            CurrentNode.WordCount = CurrentTextSection.Split(' ', StringSplitOptions.RemoveEmptyEntries).Length;           
             CurrentTextSection = string.Empty;
 
             var nodeToUpdate = CurrentNode.Parent;
@@ -113,56 +114,56 @@ public class RecursiveCollector
         CurrentNode = node;
     }
 
-    public void Report(bool csvFormat = false)
-    {
-        CsvOutputFormat = csvFormat;
+    //public void Report(bool csvFormat = false)
+    //{
+    //    CsvOutputFormat = csvFormat;
 
-        if (CsvOutputFormat)
-            Console.WriteLine("Outline, Num, Name, Word Count");
+    //    if (CsvOutputFormat)
+    //        Console.WriteLine("Outline, Num, Name, Word Count");
 
-        Traverse(ParentNode);
-    }
+    //    Traverse(ParentNode);
+    //}
 
-    internal void Traverse(Node node)
-    {
-        if (node.Parent != null)
-            ReportInfo(node);
+    //internal void Traverse(Node node)
+    //{
+    //    if (node.Parent != null)
+    //        ReportInfo(node);
 
-        foreach (var n in node.Children)
-        {
-            Traverse(n);
-        }
-    }
+    //    foreach (var n in node.Children)
+    //    {
+    //        Traverse(n);
+    //    }
+    //}
 
+    //internal void ReportInfo(Node node, string mode)
+    //{
 
-    internal void ReportInfo(Node node)
-    {
-        // TODO: improve
-        var padding = CsvOutputFormat ? string.Empty : new string(' ', node.Level * 4);
+    //    // TODO: improve
+    //    var padding = CsvOutputFormat ? string.Empty : new string(' ', node.Level * 4);
 
-        if (node.Heading.Contains("Title"))
-            return;
+    //    if (node.Heading.Contains("Title"))
+    //        return;
 
-        var parsedHeading = ParsedHeading(node.Heading);
-        var reportLine = $"{padding}{parsedHeading}, {node.WordCount}";
+    //    var parsedHeading = ParsedHeading(node.Heading);
+    //    var reportLine = $"{padding}{parsedHeading}, {node.WordCount}";
 
-        Console.WriteLine(reportLine);
-    }
+    //    Console.WriteLine(reportLine);
+    //}
 
-    internal string ParsedHeading(string heading)
-    {
-        // TODO: UGLY
-        if (CsvOutputFormat)
-        {
-            heading = heading.Replace(":", ",")
-                .Replace("Prolgue ", "Prologue, ")
-                .Replace("Part ", "Part, ")
-                .Replace("Episode ", "Episode, ")
-                .Replace("Chapter ", "Chapter, ")
-                .Replace("Scene ", "Scene, ");
-        }
+    //internal string ParsedHeading(string heading)
+    //{
+    //    // TODO: UGLY
+    //    if (CsvOutputFormat)
+    //    {
+    //        heading = heading.Replace(":", ",")
+    //            .Replace("Prolgue ", "Prologue, ")
+    //            .Replace("Part ", "Part, ")
+    //            .Replace("Episode ", "Episode, ")
+    //            .Replace("Chapter ", "Chapter, ")
+    //            .Replace("Scene ", "Scene, ");
+    //    }
 
-        return heading + ",";
-    }
+    //    return heading + ",";
+    //}
 
 }
